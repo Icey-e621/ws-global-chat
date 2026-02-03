@@ -1,0 +1,17 @@
+{
+    "configurations": [
+        {
+            "name": "Debug executable 'chat-global'",
+            "type": "lldb",
+            "request": "launch",
+            "cargo": {
+                "args": [
+                    "run",
+                    "--bin=chat-global"
+                ]
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}

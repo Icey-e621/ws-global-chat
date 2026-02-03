@@ -1,16 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rust WebSocket Chat</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-    <div id="chat-box">
-        <div id="messages"></div>
-        <input type="text" id="input" placeholder="Type a message..." autofocus>
+    <div id="login-overlay">
+        <div id="login-modal">
+            <h1>Chat Login</h1>
+            <div id="login-error" class="hidden"></div>
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button id="login-button">Login</button>
+        </div>
     </div>
-    <script src="script.js"></script>
+    <div id="chat-box" class="hidden">
+        <script src="script.js"></script>
 </body>
+
 </html>

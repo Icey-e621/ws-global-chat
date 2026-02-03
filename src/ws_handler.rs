@@ -1,20 +1,12 @@
-use std::sync::{Arc, Mutex};
-use std::collections::HashSet;
 use futures_util::{SinkExt, StreamExt as _};
 use tokio::sync::broadcast;
 use warp::filters::ws::{Message, WebSocket};
-use serde::{Deserialize, Serialize};
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-struct ChatMessage {
-    user_id: usize,
-    content: String,
-}
+use crate::db::ChatMessage;
 
 
-pub async fn handle_connection(ws: WebSocket, tx: Arc<Mutex<broadcast::Sender<String>>>, valid_users: Arc<HashSet<usize>>) {
+pub async fn handle_connection(pool: sqlx::MySqlPool, ws: WebSocket, tx: broadcast::Sender<String>) {
     let (mut ws_sender, mut ws_receiver) = ws.split();
-    let mut rx = tx.lock().unwrap().subscribe();
+    let mut rx = tx.subscribe();
     tokio::spawn(async move {
         while let Ok(msg) = rx.recv().await {
             if ws_sender.send(Message::text(msg)).await.is_err() {
@@ -29,11 +21,11 @@ pub async fn handle_connection(ws: WebSocket, tx: Arc<Mutex<broadcast::Sender<St
             Ok(message) => {
                 if let Ok(text) = message.to_str() {
                     if let Ok(chat_msg) = serde_json::from_str::<ChatMessage>(text) {
-                        if valid_users.contains(&chat_msg.user_id) {
+                        if crate::tables::user_db::find_user_by_username(&pool, &chat_msg.username).await.is_ok() {
                             //lock thread until sender mutex acquired, then sends received message to the broadcast
-                            tx.lock().unwrap().send(text.to_string()).expect("Failed to broadcast message");
+                            tx.send(text.to_string()).expect("Failed to broadcast message");
                         } else {
-                            println!("Unauthorized user_id: {}", chat_msg.user_id);
+                            println!("Unauthorized user_id: {}", chat_msg.username);
                         }
                     } else {
                         println!("Failed to parse message: {}", text);
