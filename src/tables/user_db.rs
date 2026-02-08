@@ -25,7 +25,8 @@ pub async fn get_chat_history(
         ChatMessage,
         r#"
         SELECT 
-            m.id as message_id, 
+            m.id as message_id,
+            m.user_id,
             u.username, 
             m.content, 
             m.created_at
@@ -96,4 +97,19 @@ pub async fn create_user(
 
     // Returns the number of rows affected (should be 1)
     Ok(result.rows_affected())
+}
+
+pub async fn save_message(
+    pool: &sqlx::MySqlPool,
+    user_id: i32,
+    content: &str,
+) -> Result<(), sqlx::Error> {
+    sqlx::query!(
+        "INSERT INTO messages (user_id, content) VALUES (?, ?)",
+        user_id,
+        content
+    )
+    .execute(pool)
+    .await?;
+    Ok(())
 }

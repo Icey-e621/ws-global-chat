@@ -21,11 +21,13 @@ pub async fn handle_connection(pool: sqlx::MySqlPool, ws: WebSocket, tx: broadca
             Ok(message) => {
                 if let Ok(text) = message.to_str() {
                     if let Ok(chat_msg) = serde_json::from_str::<ChatMessage>(text) {
-                        if crate::tables::user_db::find_user_by_username(&pool, &chat_msg.username).await.is_ok() {
-                            //lock thread until sender mutex acquired, then sends received message to the broadcast
-                            tx.send(text.to_string()).expect("Failed to broadcast message");
+                        if crate::tables::user_db::save_message(&pool, chat_msg.user_id, &chat_msg.content).await.is_ok() {
+                            // Serialize the ChatMessage back to JSON to ensure only username and content are sent
+                            if let Ok(broadcast_text) = serde_json::to_string(&chat_msg) {
+                                tx.send(broadcast_text).expect("Failed to broadcast message");
+                            }
                         } else {
-                            println!("Unauthorized user_id: {}", chat_msg.username);
+                            println!("Unauthorized or failed to save message from user: {}", chat_msg.username);
                         }
                     } else {
                         println!("Failed to parse message: {}", text);

@@ -47,6 +47,7 @@ services:
       watch: 
         - action: rebuild
           path: ./src
+          target: ./src
     links:
       - db:app.database.local
     secrets:

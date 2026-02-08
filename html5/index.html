@@ -11,15 +11,22 @@
 <body>
     <div id="login-overlay">
         <div id="login-modal">
-            <h1>Chat Login</h1>
+            <h1 id="modal-title">Chat Login</h1>
             <div id="login-error" class="hidden"></div>
+            <div id="login-success" class="hidden"></div>
             <input type="text" id="username" placeholder="Username" required>
             <input type="password" id="password" placeholder="Password" required>
-            <button id="login-button">Login</button>
+            <div class="button-group">
+                <button id="login-button">Login</button>
+                <button id="register-button" class="secondary">Register</button>
+            </div>
         </div>
     </div>
     <div id="chat-box" class="hidden">
-        <script src="script.js"></script>
+        <div id="messages"></div>
+        <input type="text" id="input" placeholder="Type a message..." autofocus>
+    </div>
+    <script src="script.js"></script>
 </body>
 
 </html>

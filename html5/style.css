@@ -62,10 +62,16 @@ body {
     background: rgba(255, 255, 255, 0.2);
 }
 
-#login-button {
-    width: 100%;
+.button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+#login-button,
+#register-button {
+    flex: 1;
     padding: 12px;
-    background: #e94560;
     border: none;
     border-radius: 8px;
     color: white;
@@ -74,13 +80,33 @@ body {
     transition: transform 0.2s ease, background 0.3s ease;
 }
 
+#login-button {
+    background: #e94560;
+}
+
 #login-button:hover {
     background: #ff4d6d;
     transform: translateY(-2px);
 }
 
+#register-button.secondary {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+#register-button.secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
 #login-error {
     color: #ff4d6d;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+#login-success {
+    color: #4dfa8f;
     margin-bottom: 1rem;
     font-size: 0.9rem;
 }
