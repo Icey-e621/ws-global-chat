@@ -67,7 +67,7 @@ pub fn verify_password(password: &str, hashstr: &str) -> Result<(), argon2::pass
     let argon2 = Argon2::default();
     let hash = match argon2::PasswordHash::parse(hashstr, argon2::password_hash::Encoding::B64) {
         Ok(parsed_hash) => {parsed_hash},
-        Err(e) => {
+        Err(_e) => {
             print!("error: couldnt parse hash: {:?}",hashstr);
             return Err(argon2::password_hash::Error::PhcStringField);
         }
@@ -112,4 +112,82 @@ pub async fn save_message(
     .execute(pool)
     .await?;
     Ok(())
+}
+
+pub async fn create_session(
+    pool: &sqlx::MySqlPool,
+    user_id: i32,
+) -> Result<String, sqlx::Error> {
+    let token = uuid::Uuid::new_v4().to_string();
+    let expires_at = Utc::now() + chrono::Duration::days(7);
+
+    sqlx::query!(
+        "INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, ?)",
+        token,
+        user_id,
+        expires_at
+    )
+    .execute(pool)
+    .await?;
+
+    Ok(token)
+}
+
+pub async fn get_user_by_session_token(
+    pool: &sqlx::MySqlPool,
+    token: &str,
+) -> Result<User, sqlx::Error> {
+    sqlx::query_as!(
+        User,
+        r#"
+        SELECT u.id, u.username, u.password_hash, u.created_at
+        FROM app_users u
+        JOIN sessions s ON u.id = s.user_id
+        WHERE s.token = ? AND s.expires_at > ?
+        "#,
+        token,
+        Utc::now()
+    )
+    .fetch_one(pool)
+    .await
+}
+
+pub async fn delete_session(
+    pool: &sqlx::MySqlPool,
+    token: &str,
+) -> Result<(), sqlx::Error> {
+    sqlx::query!(
+        "DELETE FROM sessions WHERE token = ?",
+        token
+    )
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+pub async fn confirm_user_id(
+    pool: &sqlx::MySqlPool,
+    user_id: i32,
+    username: &str,
+) -> Result<(), sqlx::Error> {
+    sqlx::query!(
+        "SELECT * FROM app_users WHERE username=? AND id=?",
+        username,
+        user_id
+    )
+    .fetch_one(pool)
+    .await?;
+    Ok(())
+}
+
+pub async fn cleanup_expired_sessions(
+    pool: &sqlx::MySqlPool,
+) -> Result<u64, sqlx::Error> {
+    let result = sqlx::query!(
+        "DELETE FROM sessions WHERE expires_at < ?",
+        Utc::now()
+    )
+    .execute(pool)
+    .await?;
+    Ok(result.rows_affected())
 }

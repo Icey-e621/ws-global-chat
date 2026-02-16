@@ -34,20 +34,20 @@ services:
     container_name: chat_server
     build:
       context: .
-      target: final
+      # target: final this is for release
+      target: dev
     environment:
       - RUST_LOG=chat_server=info
       - DATABASE_URL_NAME=db-url-total
+    # volumes for debug
+    volumes:
+      - .:/app
+      - /app/target
     depends_on:
       db:
         condition: service_healthy
     expose:
       - 8000
-    develop:
-      watch: 
-        - action: rebuild
-          path: ./src
-          target: ./src
     links:
       - db:app.database.local
     secrets:

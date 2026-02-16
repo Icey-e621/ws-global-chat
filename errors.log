@@ -1,0 +1,17 @@
+    Checking chat-global v0.1.0 (E:\Programacion\Rustacean\chat-global)
+warning: fields `message_id` and `created_at` are never read
+  --> src\db.rs:11:9
+   |
+10 | pub struct ChatMessage {
+   |            ----------- fields in this struct
+11 |     pub message_id: i64,
+   |         ^^^^^^^^^^
+...
+15 |     pub created_at: std::option::Option<DateTime<Utc>>,
+   |         ^^^^^^^^^^
+   |
+   = note: `ChatMessage` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` on by default
+
+warning: `chat-global` (bin "chat-global") generated 1 warning
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.55s

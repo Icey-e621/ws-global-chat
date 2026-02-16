@@ -9,7 +9,7 @@
 </head>
 
 <body>
-    <div id="login-overlay">
+    <div id="login-overlay" class="hidden">
         <div id="login-modal">
             <h1 id="modal-title">Chat Login</h1>
             <div id="login-error" class="hidden"></div>
@@ -23,6 +23,9 @@
         </div>
     </div>
     <div id="chat-box" class="hidden">
+        <div id="chat-header">
+            <button id="logout-button">Logout</button>
+        </div>
         <div id="messages"></div>
         <input type="text" id="input" placeholder="Type a message..." autofocus>
     </div>

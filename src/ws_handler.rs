@@ -21,7 +21,8 @@ pub async fn handle_connection(pool: sqlx::MySqlPool, ws: WebSocket, tx: broadca
             Ok(message) => {
                 if let Ok(text) = message.to_str() {
                     if let Ok(chat_msg) = serde_json::from_str::<ChatMessage>(text) {
-                        if crate::tables::user_db::save_message(&pool, chat_msg.user_id, &chat_msg.content).await.is_ok() {
+                        if crate::tables::user_db::confirm_user_id(&pool, chat_msg.user_id, &chat_msg.username).await.is_ok() && crate::tables::user_db::save_message(&pool, chat_msg.user_id, &chat_msg.content).await.is_ok() 
+                        {
                             // Serialize the ChatMessage back to JSON to ensure only username and content are sent
                             if let Ok(broadcast_text) = serde_json::to_string(&chat_msg) {
                                 tx.send(broadcast_text).expect("Failed to broadcast message");

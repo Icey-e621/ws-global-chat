@@ -76,3 +76,25 @@ EXPOSE 8000
 
 # What the container should run when it is started.
 CMD ["/bin/server"]
+
+
+################################################################################
+# Create a stage for development with hot-reloading
+FROM rust:${RUST_VERSION}-alpine AS dev
+ARG APP_NAME
+WORKDIR /app
+
+ENV SQLX_OFFLINE=true 
+
+# Install development dependencies
+RUN apk add --no-cache musl-dev git
+
+# Install cargo-watch for hot reloading
+RUN cargo install cargo-watch
+
+# Copy the entire project for the dev environment
+COPY . .
+
+# Run cargo-watch to rebuild on changes
+# We use --exec "run" to start the app immediately after a successful build
+CMD ["cargo", "watch", "-x", "run"]

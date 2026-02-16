@@ -6,14 +6,12 @@ use crate::db::secrets::get_secret;
 
 mod secrets;
 
-#[derive(sqlx::FromRow, serde::Serialize)]
+#[derive(sqlx::FromRow, Debug)]
 pub struct ChatMessage {
-    #[serde(skip_serializing)]
     pub message_id: i64,
     pub user_id: i32,
     pub username: String,
     pub content: String,
-    #[serde(skip_serializing)]
     pub created_at: std::option::Option<DateTime<Utc>>,
 }
 
@@ -39,6 +37,25 @@ impl<'de> serde::Deserialize<'de> for ChatMessage {
         })
     }
 }
+
+impl serde::Serialize for ChatMessage {
+    fn serialize<D>(&self, serializer: D) -> Result<D::Ok, D::Error>
+    where
+        D: serde::Serializer,
+    {
+        #[derive(serde::Serialize)]
+        struct RawChatMessage {
+            username: String,
+            content: String,
+        }
+        let message = RawChatMessage {
+            username: self.username.clone(),
+            content: self.content.clone(),
+        };
+        message.serialize(serializer)
+    }
+}
+
 
 pub async fn create_pool() -> Result<MySqlPool, sqlx::Error> {
     

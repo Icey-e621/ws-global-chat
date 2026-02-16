@@ -121,6 +121,29 @@ body {
     padding: 20px;
     display: flex;
     flex-direction: column;
+    position: relative;
+}
+
+#chat-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+}
+
+#logout-button {
+    background: rgba(233, 69, 96, 0.2);
+    color: #fff;
+    border: 1px solid rgba(233, 69, 96, 0.5);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+}
+
+#logout-button:hover {
+    background: rgba(233, 69, 96, 0.4);
+    outline: 2px solid #e94560;
 }
 
 #messages {
@@ -152,5 +175,43 @@ body {
 
 #input:focus {
     outline: none;
-    border-color: #e94560;
+    border-color: #ff4d6d;
+}
+
+
+/* --- 1. CHROME, EDGE, SAFARI (WebKit) --- */
+#messages::-webkit-scrollbar {
+    width: 8px;
+}
+
+#messages::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+#messages::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+/* Hover effect for WebKit */
+#messages:hover::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    /* Neon Glow*/
+    box-shadow: 0 0 10px #e94560, 0 0 20px #e94560;
+    /* Optional: gives it a slight white core for more realism */
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* --- 2. FIREFOX --- */
+#messages {
+    /* Format: [Thumb Color] [Track Color] */
+    scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05);
+    scrollbar-width: thin;
+}
+
+/* Hover effect for Firefox */
+#messages:hover {
+    scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05);
 }

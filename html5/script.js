@@ -11,6 +11,7 @@ const loginSuccess = document.getElementById('login-success');
 const chatBox = document.getElementById('chat-box');
 const messages = document.getElementById('messages');
 const input = document.getElementById('input');
+const logoutButton = document.getElementById('logout-button');
 
 let ws;
 let currentUsername = "";
@@ -101,12 +102,38 @@ function showSuccess(msg) {
     loginError.classList.add('hidden');
 }
 
+async function load_history(limit) {
+    try {
+        const response = await fetch('/api/get_chat_history?limit=' + limit, {
+            method: 'GET',
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            data.forEach(current_message => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message';
+                messageDiv.textContent = `< ${current_message.username} > - ${current_message.content}`;
+                messages.appendChild(messageDiv);
+                messages.scrollTop = messages.scrollHeight;
+            });
+        } else {
+            showError(data || "Unable to retrieve the chat_history");
+        }
+    } catch (err) {
+        showError("Could not connect with server");
+    }
+}
+
 function startChat() {
     loginOverlay.classList.add('hidden');
     chatBox.classList.remove('hidden');
     input.focus();
 
     ws = new WebSocket(`${protocol}//${host}/ws`);
+
+    load_history(50);
 
     ws.onmessage = (event) => {
         const messageDiv = document.createElement('div');
@@ -129,3 +156,33 @@ input.addEventListener('keypress', (e) => {
         input.value = '';
     }
 });
+
+logoutButton.addEventListener('click', async () => {
+    try {
+        await fetch('/api/logout', { method: 'POST' });
+        window.location.reload();
+    } catch (err) {
+        console.error("Logout failed", err);
+        window.location.reload();
+    }
+});
+
+// Check for existing session
+async function checkSession() {
+    try {
+        const response = await fetch('/api/me');
+        if (response.ok) {
+            const data = await response.json();
+            currentUsername = data.username;
+            currentUserId = data.id;
+            startChat();
+        } else {
+            loginOverlay.classList.remove('hidden');
+        }
+    } catch (err) {
+        console.log("No active session found");
+        loginOverlay.classList.remove('hidden');
+    }
+}
+
+checkSession();
