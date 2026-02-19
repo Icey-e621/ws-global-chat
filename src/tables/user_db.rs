@@ -29,7 +29,8 @@ pub async fn get_chat_history(
             m.user_id,
             u.username, 
             m.content, 
-            m.created_at
+            m.created_at,
+            NULL as `session_id: String`
         FROM messages m
         JOIN app_users u ON m.user_id = u.id
         ORDER BY m.created_at ASC
@@ -133,25 +134,6 @@ pub async fn create_session(
     Ok(token)
 }
 
-pub async fn get_user_by_session_token(
-    pool: &sqlx::MySqlPool,
-    token: &str,
-) -> Result<User, sqlx::Error> {
-    sqlx::query_as!(
-        User,
-        r#"
-        SELECT u.id, u.username, u.password_hash, u.created_at
-        FROM app_users u
-        JOIN sessions s ON u.id = s.user_id
-        WHERE s.token = ? AND s.expires_at > ?
-        "#,
-        token,
-        Utc::now()
-    )
-    .fetch_one(pool)
-    .await
-}
-
 pub async fn delete_session(
     pool: &sqlx::MySqlPool,
     token: &str,
@@ -165,7 +147,7 @@ pub async fn delete_session(
     Ok(())
 }
 
-pub async fn confirm_user_id(
+pub async fn _confirm_user_id(
     pool: &sqlx::MySqlPool,
     user_id: i32,
     username: &str,
@@ -190,4 +172,36 @@ pub async fn cleanup_expired_sessions(
     .execute(pool)
     .await?;
     Ok(result.rows_affected())
+}
+
+pub async fn get_all_valid_sessions(
+    pool: &sqlx::MySqlPool,
+) -> Result<Vec<String>, sqlx::Error> {
+    let rows = sqlx::query!(
+        "SELECT token FROM sessions WHERE expires_at > ?",
+        Utc::now()
+    )
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows.into_iter().map(|r| r.token).collect())
+}
+
+pub async fn get_user_by_token(
+    pool: &sqlx::MySqlPool,
+    token: &str,
+) -> Result<User, sqlx::Error> {
+    sqlx::query_as!(
+        User,
+        r#"
+        SELECT u.id, u.username, u.password_hash, u.created_at
+        FROM app_users u
+        JOIN sessions s ON u.id = s.user_id
+        WHERE s.token = ? AND s.expires_at > ?
+        "#,
+        token,
+        Utc::now()
+    )
+    .fetch_one(pool)
+    .await
 }

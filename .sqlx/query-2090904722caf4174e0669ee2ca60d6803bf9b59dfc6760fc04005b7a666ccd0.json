@@ -1,0 +1,24 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT token FROM sessions WHERE expires_at > ?",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "token",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | PRIMARY_KEY | NO_DEFAULT_VALUE",
+          "max_size": 1020
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "2090904722caf4174e0669ee2ca60d6803bf9b59dfc6760fc04005b7a666ccd0"
+}

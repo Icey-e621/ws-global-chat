@@ -13,6 +13,7 @@ pub struct ChatMessage {
     pub username: String,
     pub content: String,
     pub created_at: std::option::Option<DateTime<Utc>>,
+    pub session_id: Option<String>,
 }
 
 impl<'de> serde::Deserialize<'de> for ChatMessage {
@@ -22,33 +23,33 @@ impl<'de> serde::Deserialize<'de> for ChatMessage {
     {
         #[derive(serde::Deserialize)]
         struct RawChatMessage {
-            user_id: i32,
-            username: String,
+            session_id: String,
             content: String,
         }
 
         let raw = RawChatMessage::deserialize(deserializer)?;
         Ok(ChatMessage {
             message_id: 0,
-            user_id: raw.user_id,
-            username: raw.username,
+            user_id: 0,
+            username: String::new(),
             content: raw.content,
             created_at: None,
+            session_id: Some(raw.session_id),
         })
     }
 }
 
 impl serde::Serialize for ChatMessage {
-    fn serialize<D>(&self, serializer: D) -> Result<D::Ok, D::Error>
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        D: serde::Serializer,
+        S: serde::Serializer,
     {
         #[derive(serde::Serialize)]
-        struct RawChatMessage {
+        struct SerializedChatMessage {
             username: String,
             content: String,
         }
-        let message = RawChatMessage {
+        let message = SerializedChatMessage {
             username: self.username.clone(),
             content: self.content.clone(),
         };
@@ -58,7 +59,6 @@ impl serde::Serialize for ChatMessage {
 
 
 pub async fn create_pool() -> Result<MySqlPool, sqlx::Error> {
-    
     let database_url = get_secret(env::var("DATABASE_URL_NAME")
         .expect("The name of the secret containing the full database url must be passed").as_str());
 

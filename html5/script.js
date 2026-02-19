@@ -8,87 +8,77 @@ const usernameInput = document.getElementById('username');
 const passwordInput = document.getElementById('password');
 const loginError = document.getElementById('login-error');
 const loginSuccess = document.getElementById('login-success');
-const chatBox = document.getElementById('chat-box');
-const messages = document.getElementById('messages');
+const chatBox = document.getElementById('chat-box'); // Kept from original, not explicitly removed by edit
+const messagesDiv = document.getElementById('messages');
 const input = document.getElementById('input');
 const logoutButton = document.getElementById('logout-button');
 
-let ws;
-let currentUsername = "";
+let socket;
+let currentSessionToken = null;
 
-let currentUserId = 0;
+async function checkSession() {
+    try {
+        const response = await fetch('/api/me');
+        if (response.ok) {
+            const data = await response.json();
+            if (data.valid) {
+                currentSessionToken = data.session_token;
+                startChat();
+            } else {
+                loginOverlay.classList.remove('hidden');
+            }
+        } else {
+            console.log("Session invalid or expired (Status: " + response.status + ")");
+            loginOverlay.classList.remove('hidden');
+        }
+    } catch (err) {
+        console.error("Error during session check:", err);
+        loginOverlay.classList.remove('hidden');
+    }
+}
 
-loginButton.addEventListener('click', async () => {
+async function handleAuth(endpoint) {
     const username = usernameInput.value;
     const password = passwordInput.value;
 
     if (!username || !password) {
-        showError("Username and password are required");
+        showError("Please enter both username and password");
         return;
     }
 
     try {
-        const response = await fetch('/api/login', {
+        const response = await fetch(`/api/${endpoint}`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                username: username,
-                password: password,
-            }),
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
         });
 
         const data = await response.json();
 
         if (response.ok) {
-            currentUsername = username;
-            currentUserId = data.user_id;
+            showSuccess(data.message);
+            currentSessionToken = data.session_token;
             startChat();
         } else {
-            showError(data || "Invalid credentials");
+            showError(data || "Authentication failed");
         }
     } catch (err) {
-        showError("Could not connect to server");
+        showError("Server error, please try again later");
     }
-});
+}
 
-registerButton.addEventListener('click', async () => {
-    const username = usernameInput.value;
-    const password = passwordInput.value;
+loginButton.onclick = () => handleAuth('login');
+registerButton.onclick = () => handleAuth('register');
 
-    if (!username || !password) {
-        showError("Username and password are required");
-        return;
-    }
-
+logoutButton.onclick = async () => {
     try {
-        const response = await fetch('/api/register', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                username: username,
-                password: password,
-            }),
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            currentUsername = username;
-            currentUserId = data.user_id;
-            showSuccess(data.message || "Registration successful! You can now login.");
-            loginError.classList.add('hidden');
-        } else {
-            showError(data || "Registration failed");
-            loginSuccess.classList.add('hidden');
-        }
+        await fetch('/api/logout', { method: 'POST' });
+        currentSessionToken = null;
+        location.reload();
     } catch (err) {
-        showError("Could not connect to server");
+        console.error("Logout failed", err);
     }
-});
+};
 
 function showError(msg) {
     loginError.textContent = msg;
@@ -114,7 +104,7 @@ async function load_history(limit) {
             data.forEach(current_message => {
                 const messageDiv = document.createElement('div');
                 messageDiv.className = 'message';
-                messageDiv.textContent = `< ${current_message.username} > - ${current_message.content}`;
+                messageDiv.innerHTML = `<strong>${current_message.username}:</strong> ${current_message.content}`;
                 messages.appendChild(messageDiv);
                 messages.scrollTop = messages.scrollHeight;
             });
@@ -131,32 +121,35 @@ function startChat() {
     chatBox.classList.remove('hidden');
     input.focus();
 
-    ws = new WebSocket(`${protocol}//${host}/ws`);
+    socket = new WebSocket(`${protocol}//${host}/ws`);
 
     load_history(50);
 
-    ws.onmessage = (event) => {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'message';
-        let data = JSON.parse(event.data);
-        messageDiv.textContent = `< ${data.username} > - ${data.content}`;
-        messages.appendChild(messageDiv);
-        messages.scrollTop = messages.scrollHeight;
+    socket.onmessage = function (event) {
+        const msg = JSON.parse(event.data);
+        const messageElement = document.createElement('div');
+        messageElement.className = 'message';
+        messageElement.innerHTML = `<strong>${msg.username}:</strong> ${msg.content}`;
+        messagesDiv.appendChild(messageElement);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    };
+
+    socket.onclose = function () {
+        console.log("WebSocket connection closed");
     };
 }
 
-input.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && input.value && ws) {
+//send messaage function
+input.addEventListener('keypress', (event) => {
+    if (event.key === 'Enter' && input.value.trim() !== '' && socket) {
         const msg = {
-            user_id: currentUserId,
-            username: currentUsername,
+            session_id: currentSessionToken,
             content: input.value
         };
-        ws.send(JSON.stringify(msg));
+        socket.send(JSON.stringify(msg));
         input.value = '';
     }
 });
-
 logoutButton.addEventListener('click', async () => {
     try {
         await fetch('/api/logout', { method: 'POST' });
@@ -166,23 +159,5 @@ logoutButton.addEventListener('click', async () => {
         window.location.reload();
     }
 });
-
-// Check for existing session
-async function checkSession() {
-    try {
-        const response = await fetch('/api/me');
-        if (response.ok) {
-            const data = await response.json();
-            currentUsername = data.username;
-            currentUserId = data.id;
-            startChat();
-        } else {
-            loginOverlay.classList.remove('hidden');
-        }
-    } catch (err) {
-        console.log("No active session found");
-        loginOverlay.classList.remove('hidden');
-    }
-}
 
 checkSession();
