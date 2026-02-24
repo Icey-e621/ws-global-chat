@@ -20,6 +20,7 @@ Dockerized app that makes a web app and api to serve a chat that goes trough web
 - /api/logout?id=<sessid> -> errases cookie and closes session given by cookie or id parameter in the future
 - /api/get_chat_history?limit=<number> -> responds with the x number of messages last sent (currently exploitable, careful can use a lot of bandwith)
 ### data_structures
+```
 LoginRequest {
     "username": "myname",
     "password": "pass",
@@ -32,3 +33,4 @@ AuthResponse {
     "message": "successful auth (is for debugging and optional)",
     "session_token": "token_or_null",
 }
+```
