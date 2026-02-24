@@ -14,9 +14,9 @@ Dockerized app that makes a web app and api to serve a chat that goes trough web
 - /api/ws -> websocket connection
 - /api/me?id=<sessid> -> (MeResponse) Verify wether session is expired, default takes cookie as session_id, in the future it will support id get parameter (400 OK = not expired)
 - /api/login -> (AuthResponse) returns cookie with session_id
-  POST: Login_Request
+  - POST: Login_Request
 - /api/register -> (AuthResponse) returns cookie with session_id and errors if user already exists
-  POST: Login_Request
+  - POST: Login_Request
 - /api/logout?id=<sessid> -> errases cookie and closes session given by cookie or id parameter in the future
 - /api/get_chat_history?limit=<number> -> responds with the x number of messages last sent (currently exploitable, careful can use a lot of bandwith)
 ### data_structures
