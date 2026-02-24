@@ -200,7 +200,7 @@ pub fn get_chat_history(
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
     warp::path("api")
         .and(warp::path("get_chat_history"))
-        .and(warp::get()) // Intercept only POST requests
+        .and(warp::get()) // Intercept only GET requests
         .and(warp::query::query())
         .and(warp::any().map(move || pool.clone())) // Inject the database pool
         .and_then(handle_chat_history) // Pass the data to your logic function
