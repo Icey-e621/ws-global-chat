@@ -17,10 +17,10 @@ All WebSocket messages use a typed envelope:
   "metadata": {
     "session_id": "<session_token>",
     "to_username": "<target_user>",
-    "sent_when_override": "<optional_timestamp>"
+    "sent_when_override": "<optional_timestamp>",
   },
   "content": "message text",
-  "extra": {}
+  "extra": {} // only if message is ephemereal
 }
 ```
 
@@ -29,8 +29,10 @@ All WebSocket messages use a typed envelope:
 | Type | Description | Saved to DB | Routing |
 |------|-------------|-------------|---------|
 | `broadcast` | Normal chat message | yes | All connected clients via broadcast channel |
-| `private` | Direct message to a user | No | Only to target user + echoed to sender. Who-probe if target offline (2s timeout, then voided) |
+| `private` | Direct message to a user | No | Only to target user / server hosting user + echoed to sender. Who-probe if target offline (2s timeout, then voided) |
 | `ephemeral` | Temporary message, supports arbitrary `extra` metadata for client-to-client custom comms | No | All connected clients via broadcast channel |
+
+> Extra made fore client-client custom things anyone might wanna make, metadata field saved especifically for server fields.
 
 ### Message Format (Server → Client)
 ```json
@@ -44,7 +46,7 @@ All WebSocket messages use a typed envelope:
 }
 ```
 
-### Frontend Slash Commands
+### Frontend Slash Commands Javascript
 - Normal message → `broadcast`
 - `/pm @username message` → `private`
 - `/ephemeral message` → `ephemeral`
